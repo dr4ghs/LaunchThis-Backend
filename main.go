@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"github.com/agsystem/launchthis-be/api"
+	ltdb "github.com/agsystem/launchthis-be/db"
 )
 
 func main() {
-	fmt.Println("Hello, world!")
+	ltdb.Setup()
+	api.Run()
 }
