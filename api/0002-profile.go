@@ -8,16 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ============================================================================
-// PROFILE API FUNCTIONS
-// ============================================================================
-
-// Registers all profile APIs
-func RegisterProfileAPI(router *gin.Engine) {
+func init() {
 	router.GET("/profiles", getProfilesHandler)
 	router.PUT("/profiles", createProfileHandler)
 	router.GET("/profiles/:id", getProfileHandler)
 	router.DELETE("/profiles/:id", deleteProfileHandler)
+	router.GET("/profiles/:id/macros", getProfileMacrosHandler)
 	router.PATCH("/profiles/:id/assign", assignProfileHandler)
 }
 
@@ -32,34 +28,6 @@ type AssignProfileRequest struct {
 }
 
 // ============================================================================
-// PROFILE API RESPONSES
-// ============================================================================
-
-// Profile API response
-type ProfileDetailResponse struct {
-	db.Profile
-	Users []*db.APIUser `json:",omitempty"`
-}
-
-// Casts a profile record to a profile detail API response
-func ProfileToResponse(profile *db.Profile) *ProfileDetailResponse {
-	detail := &ProfileDetailResponse{}
-	detail.ID = profile.ID
-	detail.CreatedAt = profile.CreatedAt
-	detail.UpdatedAt = profile.UpdatedAt
-	detail.Name = profile.Name
-	detail.Terminal = profile.Terminal
-
-	apiUsers := []*db.APIUser{}
-	for _, element := range profile.Users {
-		apiUsers = append(apiUsers, element.ToAPI())
-	}
-	detail.Users = apiUsers
-
-	return detail
-}
-
-// ============================================================================
 // PROFILE API HANDLERS
 // ============================================================================
 
@@ -68,12 +36,7 @@ func getProfilesHandler(context *gin.Context) {
 	var profiles db.ProfileSlice
 	profiles.GetProfiles()
 
-	response := []*ProfileDetailResponse{}
-	for _, element := range profiles {
-		response = append(response, ProfileToResponse(&element))
-	}
-
-	context.IndentedJSON(http.StatusOK, response)
+	context.IndentedJSON(http.StatusOK, profiles)
 }
 
 // Retrieves a profile given its ID
@@ -83,7 +46,7 @@ func getProfileHandler(context *gin.Context) {
 		return
 	}
 
-	context.IndentedJSON(http.StatusOK, ProfileToResponse(profile))
+	context.IndentedJSON(http.StatusOK, profile)
 }
 
 // Creates a new profile
@@ -98,7 +61,7 @@ func createProfileHandler(context *gin.Context) {
 
 	(&profile).CreateProfile()
 
-	context.IndentedJSON(http.StatusOK, ProfileToResponse(&profile))
+	context.IndentedJSON(http.StatusOK, profile)
 }
 
 // Deletes a profile given its ID
@@ -111,6 +74,18 @@ func deleteProfileHandler(context *gin.Context) {
 	profile.DeleteProfile()
 
 	context.Status(http.StatusOK)
+}
+
+func getProfileMacrosHandler(context *gin.Context) {
+	profile := getProfile(context)
+	if profile == nil {
+		return
+	}
+
+	var macros db.MacroSlice
+	macros.GetProfileMacros(profile)
+
+	context.IndentedJSON(http.StatusOK, macros)
 }
 
 // Assign a profile to a user given the profile and user IDs

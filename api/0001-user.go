@@ -8,12 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ============================================================================
-// USER API FUNCTIONS
-// ============================================================================
-
-// Registers all user APIs
-func RegisterUserAPI(router *gin.Engine) {
+func init() {
 	router.GET("/users", getUsersHandler)
 	router.PUT("/users", createUserHandler)
 	router.GET("/users/:id", getUserHandler)
@@ -34,33 +29,6 @@ type UpdateProfileRequest struct {
 }
 
 // ============================================================================
-// USER API RESPONSES
-// ============================================================================
-
-// User API response
-type UserDetailResponse struct {
-	db.User
-	Profiles []*db.APIProfile `json:",omitempty"`
-}
-
-// Casts a user record to a user detail API response
-func UserToResponse(user *db.User) *UserDetailResponse {
-	detail := &UserDetailResponse{}
-	detail.ID = user.ID
-	detail.CreatedAt = user.CreatedAt
-	detail.UpdatedAt = user.UpdatedAt
-	detail.Username = user.Username
-
-	apiProfile := []*db.APIProfile{}
-	for _, element := range user.Profiles {
-		apiProfile = append(apiProfile, element.ToAPI())
-	}
-	detail.Profiles = apiProfile
-
-	return detail
-}
-
-// ============================================================================
 // USER API HANDLERS
 // ============================================================================
 
@@ -69,12 +37,7 @@ func getUsersHandler(context *gin.Context) {
 	var users db.UserSlice
 	users.GetUsers()
 
-	response := []*UserDetailResponse{}
-	for _, element := range users {
-		response = append(response, UserToResponse(&element))
-	}
-
-	context.IndentedJSON(http.StatusOK, response)
+	context.IndentedJSON(http.StatusOK, users)
 }
 
 // Retrieves a user given his ID
@@ -84,7 +47,7 @@ func getUserHandler(context *gin.Context) {
 		return
 	}
 
-	context.IndentedJSON(http.StatusOK, UserToResponse(user))
+	context.IndentedJSON(http.StatusOK, user)
 }
 
 // Creates a new user
@@ -99,7 +62,7 @@ func createUserHandler(context *gin.Context) {
 
 	(&user).CreateUser()
 
-	context.IndentedJSON(http.StatusOK, UserToResponse(&user))
+	context.IndentedJSON(http.StatusOK, user)
 }
 
 // Deletes a user given his ID
@@ -124,12 +87,7 @@ func getUserProfilesHandler(context *gin.Context) {
 	var profiles db.ProfileSlice
 	profiles.GetUserProfiles(user)
 
-	response := []*ProfileDetailResponse{}
-	for _, element := range profiles {
-		response = append(response, ProfileToResponse(&element))
-	}
-
-	context.IndentedJSON(http.StatusOK, response)
+	context.IndentedJSON(http.StatusOK, profiles)
 }
 
 // Creates a new profile and adds it to a user given the user's ID

@@ -2,10 +2,11 @@ package main
 
 import (
 	"github.com/agsystem/launchthis-be/api"
-	ltdb "github.com/agsystem/launchthis-be/db"
+	"github.com/agsystem/launchthis-be/db"
 )
 
 func main() {
-	ltdb.Setup()
+	db.WaitInit()
+	api.WaitInit()
 	api.Run()
 }

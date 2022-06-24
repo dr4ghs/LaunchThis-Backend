@@ -8,12 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ============================================================================
-// USER FUNCTIONS
-// ============================================================================
-
-// Migrates the user table
-func MigrateUser() {
+func init() {
 	db.AutoMigrate(&User{})
 }
 
@@ -24,8 +19,8 @@ func MigrateUser() {
 // User table
 type User struct {
 	ID        uint64     `gorm:"primaryKey"`
-	CreatedAt time.Time  `gorm:"autoCreateTime"`
-	UpdatedAt time.Time  `gorm:"autoUpdateTime"`
+	CreatedAt time.Time  `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt time.Time  `json:"-" gorm:"autoUpdateTime"`
 	Username  string     `gorm:"unique"`
 	Profiles  []*Profile `json:",omitempty" gorm:"many2many:user_profiles"`
 }
@@ -43,26 +38,6 @@ func (user User) String() string {
 	}
 
 	return string(json)
-}
-
-// Casts a user to an API representation
-func (user *User) ToAPI() *APIUser {
-	apiUser := &APIUser{
-		ID:       user.ID,
-		Username: user.Username,
-	}
-
-	return apiUser
-}
-
-// Casts a user slice to an API slice representation
-func (slice *UserSlice) ToAPISlice() *APIUserSlice {
-	apiSlice := APIUserSlice{}
-	for _, element := range *slice {
-		apiSlice = append(apiSlice, *element.ToAPI())
-	}
-
-	return &apiSlice
 }
 
 // Lists all users
@@ -93,16 +68,3 @@ func (user *User) DeleteUser() error {
 
 	return nil
 }
-
-// ============================================================================
-// API USER
-// ============================================================================
-
-// API representation of a user record
-type APIUser struct {
-	ID       uint64
-	Username string
-}
-
-// API user representation slice
-type APIUserSlice []APIUser

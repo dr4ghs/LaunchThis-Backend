@@ -52,3 +52,25 @@ func getProfile(context *gin.Context) *db.Profile {
 
 	return profile
 }
+
+func getMacro(context *gin.Context) *db.Macro {
+	id, err := strconv.ParseUint(context.Param("id"), 10, 64)
+	if err != nil {
+		context.IndentedJSON(http.StatusInternalServerError, gin.H{
+			"message": fmt.Sprint(err),
+		})
+		return nil
+	}
+
+	macro := &db.Macro{
+		ID: id,
+	}
+	if err := macro.GetMacro(); err != nil {
+		context.IndentedJSON(http.StatusNotFound, gin.H{
+			"message": fmt.Sprint(err),
+		})
+		return nil
+	}
+
+	return macro
+}

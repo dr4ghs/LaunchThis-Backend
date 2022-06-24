@@ -8,43 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// ============================================================================
-// PROFILE TYPES
-// ============================================================================
-
-// Terminal type definition
-type TerminalType string
-
-// Terminal types
-const (
-	Shell         TerminalType = "shell"
-	Bash                       = "bash"
-	CommandPrompt              = "cmd"
-	PowerShell                 = "powershell"
-)
-
-// ============================================================================
-// PROFILE FUNCTIONS
-// ============================================================================
-
-// Migrates the profile table
-func MigrateProfile() {
+func init() {
 	db.AutoMigrate(&Profile{})
 }
-
-// ============================================================================
-// PROFILE API
-// ============================================================================
-
-// API representation of a profile record
-type APIProfile struct {
-	ID       uint64
-	Name     string
-	Terminal TerminalType
-}
-
-// API profile representation slice
-type APIProfileSlice []APIProfile
 
 // ============================================================================
 // PROFILE TABLE
@@ -53,12 +19,11 @@ type APIProfileSlice []APIProfile
 // Profile table
 type Profile struct {
 	ID        uint64    `gorm:"primaryKey"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	CreatedAt time.Time `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"-" gorm:"autoUpdateTime"`
 	Name      string
-	Users     []*User `json:",omitempty" gorm:"many2many:user_profiles"`
-	Terminal  TerminalType
-	Macros    []*Macro `json:",omitempty"`
+	Users     []*User  `json:",omitempty" gorm:"many2many:user_profiles"`
+	Macros    []*Macro `json:",omitempty" gorm:"foreignKey:ProfileID"`
 }
 
 // Profile table slice
@@ -74,27 +39,6 @@ func (profile Profile) String() string {
 	}
 
 	return string(json)
-}
-
-// Casts a profile to an API representation
-func (profile *Profile) ToAPI() *APIProfile {
-	apiProfile := APIProfile{
-		ID:       profile.ID,
-		Name:     profile.Name,
-		Terminal: profile.Terminal,
-	}
-
-	return &apiProfile
-}
-
-// Casts a profile slice to an API slice representation
-func (slice *ProfileSlice) ToAPISlice() *APIProfileSlice {
-	apiSlice := APIProfileSlice{}
-	for _, element := range *slice {
-		apiSlice = append(apiSlice, *element.ToAPI())
-	}
-
-	return &apiSlice
 }
 
 // Lists all profiles
